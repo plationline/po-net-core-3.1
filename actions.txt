@@ -1809,3 +1809,66 @@ public IActionResult CardOnFileTokenAuthorization()
 
 	return View();
 }
+ public IActionResult SMS()
+ {
+     string response = "";
+
+     #region set_sms_fields
+
+     po.Sms.f_sms_message=@"";
+     po.Sms.f_stamp_to_send=DateTime.Now.ToString("yyyy-MM-ddThh:mm:sszzz");
+     po.Sms.f_flash_sms="0";
+     po.Sms.f_phone="";
+
+     #endregion
+
+     try
+     {
+         #region sms_request
+
+         po_sms_response _po_sms_response = po.Sms.Request<po_sms_response>();
+
+         #endregion
+
+         #region process_sms_response
+
+         if ( !po.Sms.HasError )
+         {
+
+             if ( _po_sms_response.po_error_code=="0" )
+             {
+                 switch ( _po_sms_response.x_response_code )
+                 {
+                     case "11":
+                         response="<h2>SMS-ul "+po.Sms.f_sms_message+" a fost trimis.</h2>";
+                         // please update the order status in your system
+                         break;
+                     default:
+                         response="<h2>SMS-ul nu a putut fi trimis</h2>";
+                         break;
+                 }
+             }
+             else
+             {
+
+                 response="<h2>"+_po_sms_response.po_error_reason+"</h2>";
+             }
+         }
+         else
+         {
+             response=po.Sms.GetError().Error;
+         }
+
+         #endregion
+
+     }
+     catch ( Exception e )
+     {
+         response=e.Message;
+     }
+
+     ViewData["actiune"]="SMS";
+     ViewData["response"]=response;
+
+     return View("Response");
+ }
